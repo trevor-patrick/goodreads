@@ -1,11 +1,11 @@
-There should be no raw html files being served.
 Things to do:
 
 Firstly, allow users to create and login to their account.
 
-Left off Saturday night:
-Got "create account" form to write username/password to db.
-Next: need to do some sort of check to make sure username isn't already
-taken when creating account.
 Do some research: Flask vs Apache? Similarities/differences? Is Flask
-actually used in industry or is it mainly Apache? 
+actually used in industry or is it mainly Apache?
+
+Where I left off 10/17:
+Got all of the login and accounts stuff working.
+Figured out how to store the users id as session variable.
+Need to figure out how that session variable will be useful.
