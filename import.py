@@ -13,7 +13,7 @@ if __name__ == '__main__':
     loadingBar = [' '] * 50
     percentage = 0
     frac = 0
-    # ingore first line of books.csv, as it is just the header
+
     with open('books.csv') as csv_file:
             count = 1
 
@@ -22,6 +22,8 @@ if __name__ == '__main__':
             span = math.floor(row_count/100)
 
             csv_file.seek(0) # reset pointer to first row
+
+            # ingore first line of books.csv, as it is just the header
             next(csv_reader)
             for row in csv_reader:
                 # make sure book doesn't already exist in DB

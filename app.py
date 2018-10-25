@@ -32,7 +32,6 @@ def index():
             return render_template("index.html", result = message)
         else:
             session["username"] = username
-            print(session["username"])
             return render_template("user_home.html", username = username)
 
 
@@ -64,39 +63,60 @@ def create_acct():
 def search():
     results = []
 
-    if request.form.get("title") is not None:
-        title = request.form.get("title")
-    if request.form.get("author") is not None:
-        author = request.form.get("author")
-    if request.form.get("isbn") is not None:
+    if request.form.get("isbn") is not "":
         isbn = request.form.get("isbn")
+        # --------------search by ISBN--------------
+        temp = db.execute("SELECT * FROM books WHERE isbn LIKE :isbn",
+                                {"isbn": '%' + isbn + '%'}).fetchall()
+        for item in temp:
+            if list(item) not in results:
+                results.append(list(item))
 
+    if request.form.get("title") is not "":
+        title = request.form.get("title")
+        # --------------search by title--------------
+        temp = db.execute("SELECT * FROM books WHERE title LIKE :title",
+                                {"title": '%' + title + '%'}).fetchall()
+        for item in temp:
+            if list(item) not in results:
+                results.append(list(item))
 
-    # --------------search by ISBN--------------
-    temp = db.execute("SELECT * FROM books where isbn = :isbn",
-                        {"isbn": isbn}).fetchall()
-    for item in temp:
-        if list(item) not in results:
-            results.append(list(item))
-
-
-    # --------------search by title--------------
-    temp = db.execute("SELECT * FROM books where title = :title",
-                        {"title": title}).fetchall()
-    for item in temp:
-        if list(item) not in results:
-            results.append(list(item))
-
-
-    # --------------search by author--------------
-    temp = db.execute("SELECT * FROM books where author = :author",
-                        {"author": author}).fetchall()
-    for item in temp:
-        if list(item) not in results:
-            results.append(list(item))
+    if request.form.get("author") is not "":
+        author = request.form.get("author")
+        # --------------search by author--------------
+        temp = db.execute("SELECT * FROM books WHERE author LIKE :author",
+                                {"author": '%' + author + '%'}).fetchall()
+        for item in temp:
+            if list(item) not in results:
+                results.append(list(item))
 
 
     if not results:
         return render_template("user_home.html", message = "No matches", username = session['username'])
     else:
-        return render_template("results.html", results = session["username"])
+        return render_template("results.html", results = results)
+
+
+@app.route("/link_results", methods=['POST'])
+def link_results():
+    form_id = request.form.get("form_id")
+    # print("-------------")
+    # print(form_id)
+    if form_id is "1":
+        year = db.execute("SELECT year FROM books WHERE isbn = :isbn",
+                                {"isbn": request.form.get("isbn")}).fetchone()
+        year = year[0]
+        print (year)
+        return render_template("book_details.html", author=request.form.get("author"), title=request.form.get("title"), isbn=request.form.get("isbn"), year=year)
+    if form_id is "2":
+        results = []
+        author = request.form.get("author")
+        # --------------search by author--------------
+        temp = db.execute("SELECT * FROM books WHERE author LIKE :author",
+                                {"author": '%' + author + '%'}).fetchall()
+        for item in temp:
+            if list(item) not in results:
+                results.append(list(item))
+
+
+        return render_template("books_by_author.html", author=request.form.get("author"), results=results)

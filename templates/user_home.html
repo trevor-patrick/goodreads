@@ -7,18 +7,18 @@
 </head>
 
 <body>
-<h1>{{ username }}'s Homepage</h1>
-<a href="{{ url_for('index') }}" class="btn" style="background: lightsalmon">Logout</a>
+  <h1>{{ username }}'s Homepage</h1>
 
-<h3>Search for a book</h3>
-<form action="{{ url_for('search') }}" method="post">
-  <input type="text" name="isbn" placeholder="ISBN">
-  <input type="text" name="title" placeholder="Title">
-  <input type="text" name="author" placeholder="Author">
-  <input type="submit" value="submit">
-</form>
+  <h3>Search for a book</h3>
+  <form action="{{ url_for('search') }}" method="post">
+    <input type="text" name="isbn" placeholder="ISBN">
+    <input type="text" name="title" placeholder="Title">
+    <input type="text" name="author" placeholder="Author">
+    <input type="submit" value="submit">
+  </form>
 
-  {{ message }}
+  {{ message }}</br>
+  <a href="{{ url_for('index') }}" class="btn" style="background: lightsalmon">Logout</a>
 
 </body>
 
