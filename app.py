@@ -1,8 +1,9 @@
 import os
 import sys
 import sha3
+import requests
 
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -15,7 +16,6 @@ Session(app)
 
 engine = create_engine('postgres://olxpdkjidxzijo:6c0ff6d277bd117d6e615144dab8b3fe26e190e0788c30c9aa4c6de74076af2d@ec2-54-235-242-63.compute-1.amazonaws.com:5432/d25m2jqruo7e1o')
 db = scoped_session(sessionmaker(bind=engine))
-
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
@@ -90,7 +90,6 @@ def search():
             if list(item) not in results:
                 results.append(list(item))
 
-
     if not results:
         return render_template("user_home.html", message = "No matches", username = session['username'])
     else:
@@ -100,14 +99,27 @@ def search():
 @app.route("/link_results", methods=['POST'])
 def link_results():
     form_id = request.form.get("form_id")
-    # print("-------------")
-    # print(form_id)
+
     if form_id is "1":
-        year = db.execute("SELECT year FROM books WHERE isbn = :isbn",
+        this_book_info = db.execute("SELECT * FROM books WHERE isbn = :isbn",
                                 {"isbn": request.form.get("isbn")}).fetchone()
-        year = year[0]
-        print (year)
-        return render_template("book_details.html", author=request.form.get("author"), title=request.form.get("title"), isbn=request.form.get("isbn"), year=year)
+
+        reviews = db.execute("SELECT * FROM reviews WHERE isbn = :isbn",
+                                {"isbn": request.form.get("isbn")}).fetchall()
+
+        # print(reviews)
+        # print("-----------------------")
+        session['current_isbn'] = this_book_info[1]
+        # print("Current isbn:")
+        # print(session['current_isbn'])
+
+        # get average rating from Goodreads API
+        res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "GUzdXCsWJf04i6FuBd4X9w", "isbns": session['current_isbn']})
+        json_res = json.loads(res.text)
+        average_rating = json_res['books'][0]['average_rating']
+
+        return render_template("book_details.html", this_book_info=this_book_info, reviews=reviews, average_rating=average_rating)
+
     if form_id is "2":
         results = []
         author = request.form.get("author")
@@ -117,6 +129,31 @@ def link_results():
         for item in temp:
             if list(item) not in results:
                 results.append(list(item))
-
-
         return render_template("books_by_author.html", author=request.form.get("author"), results=results)
+
+
+@app.route("/abcdefg", methods=['POST'])
+def submit_review():
+    new_review_data = [request.form.get("title"), request.form.get("review_text"), request.form.get("stars")]
+
+    db.execute("INSERT INTO reviews (isbn, review, stars, title, username) VALUES (:isbn, :review, :stars, :title, :username)",
+        {"isbn": session['current_isbn'], "review": new_review_data[1], "stars": new_review_data[2], "title": new_review_data[0], "username": session['username']})
+    db.commit()
+
+    # re-query for current book's reviews
+    new_reviews = db.execute("SELECT * FROM reviews WHERE isbn = :isbn",
+                            {"isbn": session['current_isbn']}).fetchall()
+    # query for current book info where isbn = session['current_isbn']
+    this_book_info = db.execute("SELECT * FROM books WHERE isbn = :isbn",
+                            {"isbn": session['current_isbn']}).fetchone()
+
+    return render_template("book_details.html", this_book_info=this_book_info, reviews=new_reviews)
+
+
+@app.route("/api/<isbn>")
+def return_json(isbn):
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "GUzdXCsWJf04i6FuBd4X9w", "isbns": isbn})
+    if res.status_code == 404:
+        return jsonify({"error":"invalid"}), 422
+    
+    return jsonify(res.json())

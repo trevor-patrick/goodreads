@@ -3,6 +3,7 @@
 
 <head>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
   <title>Results</title>
 </head>
 
@@ -10,16 +11,52 @@
   <button onclick="goBack()">Go Back</button>
 
   <script>
-  function goBack() {
+    function goBack() {
       window.history.back();
-  }
+    }
   </script>
 
   <h2>Full Details:</h2></br>
-  Title: {{ title }}</br>
-  Author: {{ author }}</br>
-  Publication year: {{ year }}</br>
-  ISBN: {{ isbn }}</br>
+  Title: {{ this_book_info[2] }}</br>
+  Author: {{ this_book_info[3] }}</br>
+  Publication year: {{ this_book_info[4] }}</br>
+  ISBN: {{ this_book_info[1] }}</br>
+  </br>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-6" style="height:400px;width:400px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">
+        <h2>Reviews:</h2>
+        Average rating: {{ average_rating }}/5.0
+        <div style="-webkit-hyphens: auto;-ms-hyphens: auto;hyphens: auto;">
+          {% for review in reviews %}
+          <div style="border-style: groove;">
+            <b>{{ review[3] }}</b></br>
+
+            {{ review[1] }}</br>
+
+            {% for i in range(0, review[2]) %}
+            <i class="fas fa-star"></i> {% endfor %} {% for i in range(0, 5-review[2]) %}
+            <i class="far fa-star"></i> {% endfor %}
+            </br>
+            <small>Submitted by {{ review[4] }}</small></br>
+            </br>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="col-sm-6" style="height:400px;width:400px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">
+        <h2>Submit a review:</h2>
+        <form action="{{ url_for('submit_review') }}" method="post">
+          <input required="required" style="width: 100%; margin-bottom: 10px;" type="text" name="title" placeholder="Title" maxlength="50"></br>
+          <textarea required="required" style="width: 100%; height: 100px; margin-bottom: 4px;" type="text" name="review_text" placeholder="Review" maxlength="200"></textarea></br>
+          <input required="required" style="width: 100%; margin-bottom: 10px;" type="number" step="1" min="0" max="5" name="stars" placeholder="Stars out of 5"></br>
+          <input type="submit" value="submit">
+        </form>
+      </div>
+    </div>
+  </div>
 
 </body>
 
